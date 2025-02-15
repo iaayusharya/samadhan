@@ -7,11 +7,14 @@ const App = () => {
 
     // Register Service Worker & Handle Menu Toggle
     React.useEffect(() => {
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("service-worker.js").then(() => {
-                console.log("✅ Service Worker registered!");
-            }).catch(err => console.error("❌ Service Worker registration failed:", err));
-        }
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/samadhan/service-worker.js')
+        .then((reg) => console.log("Service Worker registered!", reg))
+        .catch((err) => console.error("Service Worker registration failed:", err));
+    });
+}
+
 
         const menuToggle = document.querySelector(".menu-toggle");
         if (menuToggle) {
