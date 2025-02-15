@@ -12,6 +12,9 @@ if ("serviceWorker" in navigator) {
         });
     });
 }
+document.querySelector(".menu-toggle").addEventListener("click", function () {
+    document.querySelector("nav ul").classList.toggle("show");
+});
     
     // Fetch issues from backend
     React.useEffect(() => {
