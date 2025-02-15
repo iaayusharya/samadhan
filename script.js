@@ -4,6 +4,14 @@ const App = () => {
     const [department, setDepartment] = React.useState("");
     const [issues, setIssues] = React.useState([]);
     const [generatedApplication, setGeneratedApplication] = React.useState("");
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").then(() => {
+            console.log("Service Worker registered!");
+        });
+    });
+}
     
     // Fetch issues from backend
     React.useEffect(() => {
