@@ -15,6 +15,7 @@ header {
     padding: 15px 50px;
 }
 
+/* ✅ Logo Container Fix */
 .logo-container {
     display: flex;
     justify-content: center;
@@ -22,22 +23,26 @@ header {
     padding: 10px;
 }
 
+/* ✅ Logo Visibility Fix */
 .logo-container img {
-    max-width: 80%; /* Ensures it scales properly */
+    display: block; /* Prevents inline spacing issues */
+    max-width: 100%; /* Ensures responsiveness */
     height: auto; /* Maintains aspect ratio */
-    max-height: 100px; /* Prevents it from getting too large */
+    max-height: 100px; /* Prevents oversized logos */
 }
 
-/* Responsive Adjustments */
+/* ✅ Responsive Adjustments */
 @media (max-width: 768px) {
     .logo-container img {
-        max-height: 80px; /* Smaller logo for tablets */
+        max-width: 120px; /* Makes logo slightly smaller */
+        max-height: 80px; /* Adjusts height */
     }
 }
 
 @media (max-width: 480px) {
     .logo-container img {
-        max-height: 60px; /* Even smaller logo for mobile */
+        max-width: 100px; /* Ensures logo is visible */
+        max-height: 60px; /* Scales down for mobile */
     }
 }
 
