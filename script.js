@@ -5,85 +5,105 @@ const App = () => {
     const [issues, setIssues] = React.useState([]);
     const [generatedApplication, setGeneratedApplication] = React.useState("");
 
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js").then(() => {
-            console.log("Service Worker registered!");
-        });
-    });
-}
-document.querySelector(".menu-toggle").addEventListener("click", function () {
-    document.querySelector("nav ul").classList.toggle("show");
-});
-    
+    // Register Service Worker & Handle Menu Toggle
+    React.useEffect(() => {
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("service-worker.js").then(() => {
+                console.log("✅ Service Worker registered!");
+            }).catch(err => console.error("❌ Service Worker registration failed:", err));
+        }
+
+        const menuToggle = document.querySelector(".menu-toggle");
+        if (menuToggle) {
+            menuToggle.addEventListener("click", () => {
+                document.querySelector("nav ul").classList.toggle("show");
+            });
+        }
+    }, []);
+
     // Fetch issues from backend
     React.useEffect(() => {
         fetch("http://localhost:5000/issues")
-            .then((response) => response.json())
-            .then((data) => setIssues(data))
-            .catch((error) => console.error("Error fetching issues:", error));
+            .then(response => response.json())
+            .then(data => setIssues(data))
+            .catch(error => console.error("❌ Error fetching issues:", error));
     }, []);
 
+    // Generate Application
     const handleGenerateApplication = async () => {
         if (!issue.trim() || !department.trim()) {
-            alert("Please describe your issue and select a department.");
+            alert("⚠ Please describe your issue and select a department.");
             return;
         }
 
         try {
+            console.log("🔍 Sending data to backend:", { issue, department });
+
             const response = await fetch("http://localhost:5000/generate-application", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ issue, department }),
             });
 
+            if (!response.ok) {
+                throw new Error(`Server Error: ${response.status}`);
+            }
+
             const result = await response.json();
             if (result.application) {
                 setGeneratedApplication(result.application);
             } else {
-                alert("Failed to generate application.");
+                alert("⚠ Failed to generate application.");
             }
         } catch (error) {
-            console.error("Error generating application:", error);
-            alert("Error generating application. Please try again.");
+            console.error("❌ Error generating application:", error);
+            alert("❌ Error generating application. Please try again.");
         }
     };
 
+    // Submit Issue
     const handleSubmit = async () => {
         if (!email.trim() || !issue.trim() || !generatedApplication.trim()) {
-            alert("Please fill in all fields before submitting.");
+            alert("⚠ Please fill in all fields before submitting.");
             return;
         }
 
         try {
+            console.log("📤 Submitting issue:", { email, issue, generatedApplication, department });
+
             const response = await fetch("http://localhost:5000/submit-issue", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, issue, application: generatedApplication, department }),
             });
 
+            if (!response.ok) {
+                throw new Error(`Server Error: ${response.status}`);
+            }
+
             const result = await response.json();
             alert(result.message);
 
             // Refresh issues list
             fetch("http://localhost:5000/issues")
-                .then((response) => response.json())
-                .then((data) => setIssues(data));
+                .then(response => response.json())
+                .then(data => setIssues(data));
 
             setEmail("");
             setIssue("");
             setDepartment("");
             setGeneratedApplication("");
         } catch (error) {
-            console.error("Error submitting issue:", error);
-            alert("Failed to submit issue. Please try again.");
+            console.error("❌ Error submitting issue:", error);
+            alert("❌ Failed to submit issue. Please try again.");
         }
     };
 
+    // Copy to Clipboard
     const copyToClipboard = () => {
         navigator.clipboard.writeText(generatedApplication).then(() => {
-            alert("Application copied to clipboard!");
-        });
+            alert("✅ Application copied to clipboard!");
+        }).catch(err => console.error("❌ Error copying to clipboard:", err));
     };
 
     return (
