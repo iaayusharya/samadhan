@@ -77,26 +77,20 @@ app.get("/infra-issues", (req, res) => {
 const validateEmail = (email) => {
     return typeof email === "string" && email.endsWith("@svsu.ac.in");
 };
-// ✅ API: Generate Application
 app.post("/generate-application", async (req, res) => {
     try {
         const { email, issue, department } = req.body;
 
-        // Validate input fields
         if (!email || !issue || !department) {
             return res.status(400).json({ error: "Please provide email, issue, and department." });
         }
-        if (!validateEmail(email)) {
+        if (!email.endsWith("@svsu.ac.in")) {
             return res.status(400).json({ error: "Invalid email! Use an SVSU email (xyz@svsu.ac.in)" });
         }
 
-        console.log(`🔍 Request received from: ${email}`);
-
-        // ✅ Initialize Google Generative AI
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-        // ✅ AI Prompt
         const prompt = `
             You are an AI assistant. Write a formal application to the ${department} department of 
             Shri Vishwakarma Skill University regarding the following issue:
@@ -113,38 +107,50 @@ app.post("/generate-application", async (req, res) => {
             Ensure the letter is **well-structured**, **polite**, and **concise**.
         `;
 
-        // ✅ AI API Call
         const result = await model.generateContent({ contents: [{ parts: [{ text: prompt }] }] });
 
-        // ✅ Log AI Response
-        console.log("📜 Gemini Raw Response:", JSON.stringify(result, null, 2));
-
-        // ✅ Check AI Response Format
         if (!result || !result.response || !result.response.candidates) {
             return res.status(500).json({ error: "Failed to generate application. Try again." });
         }
 
-        // ✅ Extract Response
         const generatedText = result.response.candidates[0]?.content?.parts?.[0]?.text || "";
-        const lines = generatedText.split("\n");
 
-        // ✅ Extract Subject & Application
-        const subject = lines.find(line => line.toLowerCase().startsWith("subject:"))?.replace("Subject:", "").trim();
-        const applicationStartIndex = lines.findIndex(line => line.toLowerCase().includes("application:"));
+        console.log("📜 AI Raw Response:", generatedText);
 
-        const application = applicationStartIndex !== -1
+        // ✅ Normalize AI response (remove extra symbols like **, :, etc.)
+        const cleanedText = generatedText.replace(/\*\*/g, "").trim();
+        const lines = cleanedText.split("\n").map(line => line.trim());
+
+        // ✅ Extract Subject
+        let subject = lines.find(line => line.toLowerCase().startsWith("subject"));
+        if (subject) {
+            subject = subject.replace(/subject[:\s]*/i, "").trim();
+        } else {
+            subject = "Application Regarding Issue"; // Fallback if AI response is incorrect
+        }
+
+        // ✅ Extract Application Text
+        let applicationStartIndex = lines.findIndex(line => line.toLowerCase().includes("application"));
+        let application = applicationStartIndex !== -1
             ? lines.slice(applicationStartIndex + 1).join("\n").trim()
-            : generatedText; // Fallback
+            : lines.slice(1).join("\n").trim(); // Fallback
 
-        // ✅ Ensure AI Response is Valid
         if (!subject || !application) {
-            console.error("❌ AI response format error:", generatedText);
+            console.error("❌ AI response format issue. Received:", generatedText);
             return res.status(500).json({ error: "AI response format invalid. Try again later." });
         }
 
         // ✅ Save to Database
         const newIssue = new Issue({ email, subject, issue, department });
         await newIssue.save();
+
+        res.json({ subject, application });
+
+    } catch (error) {
+        console.error("❌ Error generating application:", error);
+        res.status(500).json({ error: "Server error while generating application." });
+    }
+});
 
         // ✅ Response
         res.json({ subject, application });
