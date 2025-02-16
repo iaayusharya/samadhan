@@ -2,7 +2,7 @@
   "name": "Samadhan4SVSU",
   "short_name": "Samadhan",
   "description": "A platform for SVSU students to report issues.",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1976d2",
