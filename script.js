@@ -12,7 +12,7 @@ const App = () => {
     const [loadingInfraIssues, setLoadingInfraIssues] = React.useState(true);
 
 
-    const API_BASE_URL = "https://samadhan-1pzu.onrender.com:10000";
+    const API_BASE_URL = "https://api.render.com/deploy/srv-cuoo84aj1k6c739bm4pg?key=s2zlN4Hqch8";
 
     // Utility function to handle API requests
     const fetchData = async (endpoint, setData, setLoading) => {
