@@ -77,6 +77,7 @@ app.get("/infra-issues", (req, res) => {
 const validateEmail = (email) => {
     return typeof email === "string" && email.endsWith("@svsu.ac.in");
 };
+//API to Generate Application
 app.post("/generate-application", async (req, res) => {
     try {
         const { email, issue, department } = req.body;
@@ -152,14 +153,6 @@ app.post("/generate-application", async (req, res) => {
     }
 });
 
-        // ✅ Response
-        res.json({ subject, application });
-
-    } catch (error) {
-        console.error("❌ Error generating application:", error);
-        res.status(500).json({ error: "Server error while generating application." });
-    }
-});
 
 // ✅ API: Get Frequent Issues
 app.get("/issues", async (req, res) => {
