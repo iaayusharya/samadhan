@@ -20,6 +20,18 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
+// ✅ Fix CORS Issue
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
+// ✅ Define Routes Below
+app.get("/", (req, res) => {
+    res.send("Server is running...");
+});
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
