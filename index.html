@@ -4,30 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Samadhan4SVSU</title>
+    
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="https://github.com/iaayusharya/samadhan/blob/main/logo.png" type="image/png">
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/samadhan/service-worker.js')
-            .then(() => console.log("Service Worker Registered"));
-    }
-</script>
+    <link rel="icon" href="logo.png" type="image/png">
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(() => console.log("✅ Service Worker Registered"))
+                .catch(error => console.error("❌ Service Worker Registration Failed:", error));
+        }
+    </script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- React and Babel for client-side rendering -->
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
 <body>
     <header>
-        <div class="menu-toggle">&#9776;</div>
         <div class="logo-container">
             <img src="logo.png" alt="Samadhan4SVSU Logo">
         </div>
         <nav>
             <ul>
                 <li><a href="#issue-form">Report Issue</a></li>
+                <li><a href="#admin-issues">Admin Issues</a></li>
+                <li><a href="#infra-issues">Infrastructure Issues</a></li>
                 <li><a href="#frequent-issues">Frequent Issues</a></li>
                 <li><a href="#contact">Contact Us</a></li>
             </ul>
@@ -37,11 +44,10 @@
     <main>
         <div id="root"></div> <!-- React will render here -->
         
+        <!-- Hero Section -->
         <section id="hero">
             <h2>Raise Your Voice, Get Solutions</h2>
-            <p>Empowering SVSU students by addressing their concerns effectively.
-                <br>सही समाधान, सही सहयोग
-            </p>
+            <p>Empowering SVSU students by addressing their concerns effectively.<br>सही समाधान, सही सहयोग</p>
             <a href="#issue-form" class="cta-button">Report an Issue</a>
         </section>
     </main>
@@ -50,9 +56,7 @@
         <section id="contact">
             <h3>Powered By</h3>
             <p>Aayush Arya</p>
-            <p>Phone: +91 8920985602
-                <br>Prosperity through solutions
-            </p>
+            <p>Phone: +91 8920985602<br>Prosperity through solutions</p>
         </section>
         <p>&copy; 2025 The Lazy Human Company. All rights reserved.</p>
     </footer>
