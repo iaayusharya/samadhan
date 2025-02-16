@@ -87,9 +87,17 @@ app.post("/generate-application", async (req, res) => {
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-        const prompt = `Write a formal application to the ${department} department regarding the following issue:
-        Issue: ${issue}
-        Format it professionally with a subject. Return the subject and application separately.`;
+        const prompt = `You are a professional assistant. Write a formal application addressed to the ${department} department of Shri Vishwakarma Skill University regarding the following issue:
+
+Issue: ${issue}
+
+### Format the response as:
+Subject: [Write a clear subject line]
+Application:
+
+[Write the full professional application letter. Use a formal tone.]
+
+Ensure the letter is well-structured with a proper salutation, introduction, body, and closing. It must be polite and concise.`;
 
         const result = await model.generateContent({ contents: [{ parts: [{ text: prompt }] }] });
 
@@ -98,18 +106,17 @@ app.post("/generate-application", async (req, res) => {
         }
 
         const generatedText = result.response.candidates[0]?.content?.parts?.[0]?.text || "";
-        const subjectMatch = generatedText.match(/Subject:\s*(.+)/i);
-        const applicationMatch = generatedText.match(/Dear.+/s);
 
-        if (!subjectMatch || !applicationMatch) {
+        const lines = generatedText.split("\n");
+        const subject = lines.find(line => line.toLowerCase().startsWith("subject:"))?.replace("Subject:", "").trim();
+        const applicationStartIndex = lines.findIndex(line => line.toLowerCase().includes("application:"));
+
+        const application = applicationStartIndex !== -1
+            ? lines.slice(applicationStartIndex + 1).join("\n").trim()
+            : generatedText; // Fallback in case parsing fails
+
+        if (!subject || !application) {
             return res.status(500).json({ error: "Failed to generate structured application." });
-        }
-
-        const subject = subjectMatch[1].trim();
-        let application = applicationMatch[0].trim();
-
-        if (!application.includes("Shri Vishwakarma Skill University")) {
-            application = `Dear [Recipient's Name],\n\nI am writing to the ${department} department of Shri Vishwakarma Skill University regarding the following issue:\n\n${issue}\n\nThank you.\n\nSincerely,\n[Your Name]`;
         }
 
         const newIssue = new Issue({ email, subject, issue, department });
