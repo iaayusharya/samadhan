@@ -225,3 +225,38 @@ const App = () => {
 
 // Render React inside the root div
 ReactDOM.render(<App />, document.getElementById("root"));
+// ✅ Register Service Worker
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then(reg => console.log("✅ Service Worker registered!", reg))
+      .catch(err => console.error("❌ Service Worker registration failed!", err));
+  });
+}
+
+// ✅ Install Prompt for PWA
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredPrompt = event;
+
+  // Show install button (Ensure this button exists in your HTML)
+  const installButton = document.getElementById("install-btn");
+  if (installButton) {
+    installButton.style.display = "block";
+
+    installButton.addEventListener("click", () => {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choice => {
+        if (choice.outcome === "accepted") {
+          console.log("🎉 User installed the PWA!");
+        } else {
+          console.log("❌ User dismissed the install prompt.");
+        }
+        deferredPrompt = null;
+      });
+    });
+  }
+});
+
