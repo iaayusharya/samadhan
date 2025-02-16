@@ -74,55 +74,78 @@ app.get("/infra-issues", (req, res) => {
 });
 
 // ✅ API: Generate Application
+// ✅ API: Generate Application
 app.post("/generate-application", async (req, res) => {
     try {
         const { email, issue, department } = req.body;
+
+        // Validate input fields
         if (!email || !issue || !department) {
             return res.status(400).json({ error: "Please provide email, issue, and department." });
         }
-        if (!email.endsWith("@svsu.ac.in")) {
+        if (!validateEmail(email)) {
             return res.status(400).json({ error: "Invalid email! Use an SVSU email (xyz@svsu.ac.in)" });
         }
 
+        console.log(`🔍 Request received from: ${email}`);
+
+        // ✅ Initialize Google Generative AI
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-        const prompt = `You are a professional assistant. Write a formal application addressed to the ${department} department of Shri Vishwakarma Skill University regarding the following issue:
+        // ✅ AI Prompt
+        const prompt = `
+            You are an AI assistant. Write a formal application to the ${department} department of 
+            Shri Vishwakarma Skill University regarding the following issue:
+            
+            **Issue:** ${issue}
+            
+            ### **Response Format:**
+            Subject: [Write a clear subject line]
+            
+            Application:
+            
+            [Write the full professional application letter. Use a formal tone.]
 
-Issue: ${issue}
+            Ensure the letter is **well-structured**, **polite**, and **concise**.
+        `;
 
-### Format the response as:
-Subject: [Write a clear subject line]
-Application:
-
-[Write the full professional application letter. Use a formal tone.]
-
-Ensure the letter is well-structured with a proper salutation, introduction, body, and closing. It must be polite and concise.`;
-
+        // ✅ AI API Call
         const result = await model.generateContent({ contents: [{ parts: [{ text: prompt }] }] });
 
+        // ✅ Log AI Response
+        console.log("📜 Gemini Raw Response:", JSON.stringify(result, null, 2));
+
+        // ✅ Check AI Response Format
         if (!result || !result.response || !result.response.candidates) {
             return res.status(500).json({ error: "Failed to generate application. Try again." });
         }
 
+        // ✅ Extract Response
         const generatedText = result.response.candidates[0]?.content?.parts?.[0]?.text || "";
-
         const lines = generatedText.split("\n");
+
+        // ✅ Extract Subject & Application
         const subject = lines.find(line => line.toLowerCase().startsWith("subject:"))?.replace("Subject:", "").trim();
         const applicationStartIndex = lines.findIndex(line => line.toLowerCase().includes("application:"));
 
         const application = applicationStartIndex !== -1
             ? lines.slice(applicationStartIndex + 1).join("\n").trim()
-            : generatedText; // Fallback in case parsing fails
+            : generatedText; // Fallback
 
+        // ✅ Ensure AI Response is Valid
         if (!subject || !application) {
-            return res.status(500).json({ error: "Failed to generate structured application." });
+            console.error("❌ AI response format error:", generatedText);
+            return res.status(500).json({ error: "AI response format invalid. Try again later." });
         }
 
+        // ✅ Save to Database
         const newIssue = new Issue({ email, subject, issue, department });
         await newIssue.save();
 
+        // ✅ Response
         res.json({ subject, application });
+
     } catch (error) {
         console.error("❌ Error generating application:", error);
         res.status(500).json({ error: "Server error while generating application." });
