@@ -39,6 +39,11 @@ const issueSchema = new mongoose.Schema({
 
 const Issue = mongoose.model("Issue", issueSchema);
 
+// ✅ Email Validation Function
+const validateEmail = (email) => {
+    return typeof email === "string" && email.endsWith("@svsu.ac.in");
+};
+
 // ✅ API: Get Administration Issues
 app.get("/admin-issues", (req, res) => {
     try {
