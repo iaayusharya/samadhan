@@ -35,10 +35,21 @@ header {
     padding: 15px 50px;
 }
 
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background-color: #333;
+    padding: 10px;
+}
+
 nav {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    position: relative; /* Needed for absolute positioning of dropdown */
 }
 
 .hamburger {
@@ -48,6 +59,7 @@ nav {
     color: white;
     font-size: 24px;
     cursor: pointer;
+    z-index: 1000; /* Ensure it stays above other elements */
 }
 
 .nav-links {
@@ -67,31 +79,32 @@ nav {
     font-size: 18px;
 }
 
+/* Mobile Styles */
 @media (max-width: 768px) {
     .hamburger {
         display: block;
     }
 
     .nav-links {
-        display: none;
+        display: flex;
         flex-direction: column;
         width: 100%;
         background-color: #333;
         position: absolute;
-        top: 50px;
+        top: -100%; /* Start off-screen */
         right: 0;
         text-align: center;
+        transition: top 0.3s ease-in-out; /* Smooth transition */
+    }
+
+    .nav-links.active {
+        top: 50px; /* Move down to visible position */
     }
 
     .nav-links li {
         margin: 10px 0;
     }
-
-    .nav-links.active {
-        display: flex;
-    }
-}
-.logo-container {
+}.logo-container {
     display: flex;
     justify-content: center;
     align-items: center;
