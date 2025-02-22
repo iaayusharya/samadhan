@@ -20,7 +20,7 @@ const App = () => {
         "Library": "library@svsu.ac.in"
     };
 
-    const API_BASE_URL = "http://localhost:5000";
+    const API_BASE_URL = "https://samadhan-1pzu.onrender.com";
 
     // Utility function to handle API requests
     const fetchData = async (endpoint, setData, setLoading) => {
