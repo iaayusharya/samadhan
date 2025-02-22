@@ -91,7 +91,8 @@ app.post("/generate-application", async (req, res) => {
 
         const prompt = `
             You are an AI assistant. Write a formal application to the ${department} department of 
-            Shri Vishwakarma Skill University regarding the following issue:
+            Shri Vishwakarma Skill University,
+            Dudhola, Palwal,Haryana- 121102 regarding the following issue:
             
             **Issue:** ${issue}
             
@@ -140,24 +141,57 @@ app.post("/submit-issue", async (req, res) => {
 
         // Define department-based email selection
         const departmentEmails = {
-            "Administration": "admin@svsu.ac.in",
-            "Examination": "exam@svsu.ac.in",
-            "Finance": "finance@svsu.ac.in",
-            "Library": "library@svsu.ac.in"
+            "Administration": {
+                to: ["vc@svsu.ac.in"], // Primary recipient(s)
+                cc: ["dean.academics@svsu.ac.in", "registrar@svsu.ac.in", "vcoffice@svsu.ac.in"], // Carbon copy recipients
+                bcc: ["vcsvsu.vikskitbharat@svsu.ac.in"] // Blind carbon copy recipients
+            },
+            "Examination": {
+                to: ["exam@svsu.ac.in"],
+                cc: ["grievanceexam@svsu.ac.in", "drexam@svsu.ac.in"], // Add CC emails here
+                bcc: ["results@svsu.ac.in"] // Add BCC emails here
+            },
+            "Department of Students Welfare (DSW)": {
+                to: ["dsw@svsu.ac.in"],
+                cc: ["kulwant.singh@svsu.ac.in"], // Add CC emails here
+                bcc: ["mohit.srivastav@svsu.ac.in"] // Add BCC emails here
+            },
+            "Library": {
+                to: ["library@svsu.ac.in"],
+                cc: ["jitendradubey@svsu.ac.in"], // Add CC emails here
+                bcc: [""] // Add BCC emails here
+            }
         };
 
-        // Get recipient email based on selected department
-        const recipientEmail = departmentEmails[department] || "default@svsu.ac.in";
+        // Get recipient email(s) based on selected department
+        const recipient = departmentEmails[department] || { to: ["info@svsu.ac.in"] };
+        const recipientEmails = recipient.to.join(","); // Join multiple "to" emails with a comma
 
         // Save the issue to the database
         const newIssue = new Issue({ applicantName, email, issue, department, subject, application });
         await newIssue.save();
 
         // Construct mailto URL (for mobile)
-        const mailtoURL = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(application)}`;
+        let mailtoURL = `mailto:${recipientEmails}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(application)}`;
+
+        // Add CC and BCC for the department
+        if (recipient.cc && recipient.cc.length > 0) {
+            mailtoURL += `&cc=${recipient.cc.join(",")}`;
+        }
+        if (recipient.bcc && recipient.bcc.length > 0) {
+            mailtoURL += `&bcc=${recipient.bcc.join(",")}`;
+        }
 
         // Construct Gmail URL (for desktop)
-        const gmailURL = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipientEmail}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(application)}`;
+        let gmailURL = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipientEmails}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(application)}`;
+
+        // Add CC and BCC for the department
+        if (recipient.cc && recipient.cc.length > 0) {
+            gmailURL += `&cc=${recipient.cc.join(",")}`;
+        }
+        if (recipient.bcc && recipient.bcc.length > 0) {
+            gmailURL += `&bcc=${recipient.bcc.join(",")}`;
+        }
 
         // Return response with both URLs
         return res.json({
@@ -170,7 +204,6 @@ app.post("/submit-issue", async (req, res) => {
         return res.status(500).json({ error: "Failed to submit issue. Please try again." });
     }
 });
-
 // ✅ API: Get Frequent Issues
 app.get("/issues", async (req, res) => {
     try {

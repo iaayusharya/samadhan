@@ -13,14 +13,7 @@ const App = () => {
     const [infraIssues, setInfraIssues] = React.useState([]);
     const [loadingInfraIssues, setLoadingInfraIssues] = React.useState(true);
 
-    const departmentEmails = {
-        "Administration": "admin@svsu.ac.in",
-        "Examination": "exam@svsu.ac.in",
-        "Finance": "finance@svsu.ac.in",
-        "Library": "library@svsu.ac.in"
-    };
-
-    const API_BASE_URL = "https://samadhan-1pzu.onrender.com";
+    const API_BASE_URL = "http://localhost:5000";
 
     // Utility function to handle API requests
     const fetchData = async (endpoint, setData, setLoading) => {
@@ -166,7 +159,7 @@ const App = () => {
                         <option value="">Select Concerned Department</option>
                         <option value="Administration">Administration</option>
                         <option value="Examination">Examination</option>
-                        <option value="Finance">Finance</option>
+                        <option value="Department of Students Welfare (DSW)">Department of Students Welfare (DSW)</option>
                         <option value="Library">Library</option>
                     </select>
                     <br /><br />
