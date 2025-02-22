@@ -38,7 +38,8 @@
             <img src="logo.png" alt="Samadhan4SVSU Logo">
         </div>
         <nav>
-            <button id="menu-toggle" aria-label="Toggle Menu">☰</button>
+            <button class="hamburger" id="hamburger-menu">☰</button>
+            <nav class="nav-links" id="nav-links"></nav>
             <ul id="nav-menu">
                 <li><a href="#issue-form">Report Issue</a></li>
                 <li><a href="#admin-issues">Admin Issues</a></li>
@@ -125,9 +126,8 @@
         });
 
         // Hamburger Menu Toggle
-        document.getElementById('menu-toggle').addEventListener('click', () => {
-            const navMenu = document.getElementById('nav-menu');
-            navMenu.classList.toggle('open');
+        document.getElementById("hamburger-menu").addEventListener("click", function() {
+            document.getElementById("nav-links").classList.toggle("active");
         });
 
         // Install Prompt for PWA
