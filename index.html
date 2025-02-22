@@ -5,18 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Samadhan4SVSU</title>
     
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Samadhan4SVSU: Empowering SVSU students by addressing their concerns effectively.">
+    <meta name="keywords" content="SVSU, student issues, grievances, solutions, administration, infrastructure">
+    <meta name="author" content="Aayush Arya">
+    <meta property="og:title" content="Samadhan4SVSU">
+    <meta property="og:description" content="Empowering SVSU students by addressing their concerns effectively.">
+    <meta property="og:image" content="logo.png">
+    <meta property="og:url" content="https://samadhan4svsu.com">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="logo.png" type="image/png">
     
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(() => console.log("✅ Service Worker Registered"))
-                .catch(error => console.error("❌ Service Worker Registration Failed:", error));
-        }
-    </script>
-    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
@@ -26,33 +32,67 @@
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
 <body>
+    <!-- Header -->
     <header>
         <div class="logo-container">
             <img src="logo.png" alt="Samadhan4SVSU Logo">
         </div>
         <nav>
-            <ul>
+            <button id="menu-toggle" aria-label="Toggle Menu">☰</button>
+            <ul id="nav-menu">
                 <li><a href="#issue-form">Report Issue</a></li>
                 <li><a href="#admin-issues">Admin Issues</a></li>
                 <li><a href="#infra-issues">Infrastructure Issues</a></li>
                 <li><a href="#frequent-issues">Frequent Issues</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#faq">FAQs</a></li>
                 <li><a href="#contact">Contact Us</a></li>
             </ul>
         </nav>
     </header>
     
+    <!-- Main Content -->
     <main>
-        <div id="root"></div> <!-- React will render here -->
+        <!-- React App -->
+        <div id="root"></div>
         
         <!-- Hero Section -->
         <section id="hero">
             <h2>Raise Your Voice, Get Solutions</h2>
             <p>Empowering SVSU students by addressing their concerns effectively.<br>सही समाधान, सही सहयोग</p>
             <a href="#issue-form" class="cta-button">Report an Issue</a>
-            <button id="install-btn" style="display: none;">Install App</button>
+        </section>
+        <!-- Lightbox Container -->
+<div id="lightbox" class="lightbox">
+    <span class="close">&times;</span>
+    <span class="prev">&#10094;</span> <!-- Left Arrow -->
+    <span class="next">&#10095;</span> <!-- Right Arrow -->
+    <div id="lightbox-content" class="lightbox-content"></div>
+    <div id="lightbox-caption" class="caption"></div>
+</div>
+        
+            </div>
+        </section>
+        
+        <!-- FAQ Section -->
+        <section id="faq">
+            <h2>Frequently Asked Questions</h2>
+            <details class="faq-item">
+                <summary>How do I report an issue?</summary>
+                <p>You can report an issue by filling out the form in the "Report Issue" section. Provide your name, email, issue description, and select the concerned department.</p>
+            </details>
+            <details class="faq-item">
+                <summary>How long does it take to resolve an issue?</summary>
+                <p>Issue resolution time depends on the complexity of the problem and the department involved. We aim to resolve issues as quickly as possible.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Can I track the status of my issue?</summary>
+                <p>Currently, we do not have a tracking system, but we are working on adding this feature soon.</p>
+            </details>
         </section>
     </main>
     
+    <!-- Footer -->
     <footer>
         <section id="contact">
             <h3>Powered By</h3>
@@ -62,6 +102,61 @@
         <p>&copy; 2025 The Lazy Human Company. All rights reserved.</p>
     </footer>
     
+    <!-- Dark Mode Toggle -->
+    <button id="theme-toggle" aria-label="Toggle Dark Mode">🌙</button>
+    
+    <!-- Scripts -->
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(() => console.log("✅ Service Worker Registered"))
+                .catch(error => console.error("❌ Service Worker Registration Failed:", error));
+        }
+
+        // Dark Mode Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            body.setAttribute('data-theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+            themeToggle.textContent = body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        });
+
+        // Hamburger Menu Toggle
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.classList.toggle('open');
+        });
+
+        // Install Prompt for PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredPrompt = event;
+
+            // Show install button
+            const installButton = document.getElementById('install-btn');
+            if (installButton) {
+                installButton.style.display = 'block';
+
+                installButton.addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choice) => {
+                        if (choice.outcome === 'accepted') {
+                            console.log('🎉 User installed the PWA!');
+                        } else {
+                            console.log('❌ User dismissed the install prompt.');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            }
+        });
+    </script>
+    
+    <!-- React App Script -->
     <script type="text/babel" src="script.js"></script>
 </body>
 </html>
