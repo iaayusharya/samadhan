@@ -39,7 +39,7 @@
         </div>
         <nav>
             <button class="hamburger" id="hamburger-menu">☰</button>
-            <nav class="nav-links" id="nav-links"></nav>
+            <ul class="nav-links" id="nav-links">
             <ul id="nav-menu">
                 <li><a href="#issue-form">Report Issue</a></li>
                 <li><a href="#admin-issues">Admin Issues</a></li>
@@ -126,9 +126,10 @@
         });
 
         // Hamburger Menu Toggle
-        document.getElementById("hamburger-menu").addEventListener("click", function() {
-            document.getElementById("nav-links").classList.toggle("active");
-        });
+        document.getElementById('hamburger-menu').addEventListener('click', function() {
+    const navLinks = document.getElementById('nav-links');
+    navLinks.classList.toggle('active');
+});
 
         // Install Prompt for PWA
         let deferredPrompt;
