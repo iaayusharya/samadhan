@@ -153,20 +153,19 @@ app.post("/submit-issue", async (req, res) => {
         const newIssue = new Issue({ applicantName, email, issue, department, subject, application });
         await newIssue.save();
 
-        // Construct Gmail Compose URL
-        const gmailURL = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipientEmail}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(application)}`;
+        // Construct mailto URL
+        const mailtoURL = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(application)}`;
 
-        // Return response with Gmail URL
+        // Return response with mailto URL
         return res.json({
             message: "Issue submitted successfully!",
-            gmailURL
+            mailtoURL
         });
     } catch (error) {
         console.error("❌ Error submitting issue:", error);
         return res.status(500).json({ error: "Failed to submit issue. Please try again." });
     }
 });
-
 // ✅ API: Get Frequent Issues
 app.get("/issues", async (req, res) => {
     try {
