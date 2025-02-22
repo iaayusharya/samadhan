@@ -59,32 +59,43 @@ const App = () => {
     }, []);
 
     // Handle application generation
-    const handleGenerateApplication = async () => {
-        if (!applicantName.trim() || !issue.trim() || !department.trim()) {
-            alert("Please fill in all fields before generating the application.");
-            return;
+   const handleSubmit = async () => {
+    if (!email.trim() || !issue.trim() || !generatedApplication.trim() || !subject.trim()) {
+        alert("Please fill in all fields before submitting.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/submit-issue`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applicantName, email, issue, department, application: generatedApplication, subject }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: Issue submission failed`);
         }
-    
-        try {
-            const response = await fetch(`${API_BASE_URL}/generate-application`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ applicantName, email, issue, department }),
-            });
-    
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
-            }
-    
-            const data = await response.json();
-            setGeneratedApplication(data.application);
-            setSubject(data.subject); // Update the subject state
-            alert("Application generated successfully!");
-        } catch (error) {
-            console.error("Error generating application:", error);
-            alert("Error generating application. Please try again.");
+
+        const result = await response.json();
+        alert(result.message || "Issue submitted successfully!");
+
+        // Open email app using mailto URL
+        if (result.mailtoURL) {
+            window.location.href = result.mailtoURL; // Opens the default email app
         }
-    };
+
+        // Clear fields after submission
+        setApplicantName("");
+        setEmail("");
+        setIssue("");
+        setDepartment("");
+        setGeneratedApplication("");
+        setSubject("");
+    } catch (error) {
+        console.error("Error submitting issue:", error);
+        alert("Failed to submit issue. Please try again.");
+    }
+};
 
     // Handle issue submission
     const handleSubmit = async () => {
