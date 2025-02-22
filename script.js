@@ -20,7 +20,7 @@ const App = () => {
         "Library": "library@svsu.ac.in"
     };
 
-    const API_BASE_URL = "https://samadhan-1pzu.onrender.com";
+    const API_BASE_URL = "http://localhost:5000";
 
     // Utility function to handle API requests
     const fetchData = async (endpoint, setData, setLoading) => {
@@ -59,82 +59,76 @@ const App = () => {
     }, []);
 
     // Handle application generation
-   const handleSubmit = async () => {
-    if (!email.trim() || !issue.trim() || !generatedApplication.trim() || !subject.trim()) {
-        alert("Please fill in all fields before submitting.");
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/submit-issue`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ applicantName, email, issue, department, application: generatedApplication, subject }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: Issue submission failed`);
+    const handleGenerateApplication = async () => {
+        if (!applicantName.trim() || !issue.trim() || !department.trim()) {
+            alert("Please fill in all fields before generating the application.");
+            return;
         }
-
-        const result = await response.json();
-        alert(result.message || "Issue submitted successfully!");
-
-        // Open email app using mailto URL
-        if (result.mailtoURL) {
-            window.location.href = result.mailtoURL; // Opens the default email app
+    
+        try {
+            const response = await fetch(`${API_BASE_URL}/generate-application`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ applicantName, email, issue, department }),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+    
+            const data = await response.json();
+            setGeneratedApplication(data.application);
+            setSubject(data.subject); // Update the subject state
+            alert("Application generated successfully!");
+        } catch (error) {
+            console.error("Error generating application:", error);
+            alert("Error generating application. Please try again.");
         }
-
-        // Clear fields after submission
-        setApplicantName("");
-        setEmail("");
-        setIssue("");
-        setDepartment("");
-        setGeneratedApplication("");
-        setSubject("");
-    } catch (error) {
-        console.error("Error submitting issue:", error);
-        alert("Failed to submit issue. Please try again.");
-    }
-};
+    };
 
     // Handle issue submission
     const handleSubmit = async () => {
-    if (!email.trim() || !issue.trim() || !generatedApplication.trim() || !subject.trim()) {
-        alert("Please fill in all fields before submitting.");
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/submit-issue`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ applicantName, email, issue, department, application: generatedApplication, subject }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: Issue submission failed`);
+        if (!email.trim() || !issue.trim() || !generatedApplication.trim() || !subject.trim()) {
+            alert("Please fill in all fields before submitting.");
+            return;
         }
-
-        const result = await response.json();
-        alert(result.message || "Issue submitted successfully!");
-
-        // Open Gmail automatically
-        if (result.gmailURL) {
-            window.open(result.gmailURL, "_blank");
+    
+        try {
+            const response = await fetch(`${API_BASE_URL}/submit-issue`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ applicantName, email, issue, department, application: generatedApplication, subject }),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: Issue submission failed`);
+            }
+    
+            const result = await response.json();
+            alert(result.message || "Issue submitted successfully!");
+    
+            // Device detection
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+            // Redirect based on device type
+            if (isMobile) {
+                window.location.href = result.mailtoURL; // Open email app on mobile
+            } else {
+                window.open(result.gmailURL, "_blank"); // Open Gmail in browser on desktop
+            }
+    
+            // Clear fields after submission
+            setApplicantName("");
+            setEmail("");
+            setIssue("");
+            setDepartment("");
+            setGeneratedApplication("");
+            setSubject("");
+        } catch (error) {
+            console.error("Error submitting issue:", error);
+            alert("Failed to submit issue. Please try again.");
         }
-
-        // Clear fields after submission
-        setApplicantName("");
-        setEmail("");
-        setIssue("");
-        setDepartment("");
-        setGeneratedApplication("");
-        setSubject(""); // Clear the subject state
-    } catch (error) {
-        console.error("Error submitting issue:", error);
-        alert("Failed to submit issue. Please try again.");
-    }
-};
+    };
     return (
         <div>
             <header style={{ background: "#007bff", color: "#fff", padding: "10px", textAlign: "center" }}>
