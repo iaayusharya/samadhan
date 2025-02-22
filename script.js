@@ -13,12 +13,7 @@ const App = () => {
     const [infraIssues, setInfraIssues] = React.useState([]);
     const [loadingInfraIssues, setLoadingInfraIssues] = React.useState(true);
 
-    const API_BASE_URL = "https://samadhan-1pzu.onrender.com"; // Use HTTP for local development
-
-    document.getElementById('menu-toggle').addEventListener('click', () => {
-        const navMenu = document.getElementById('nav-menu');
-        navMenu.classList.toggle('open');
-    });
+    const API_BASE_URL = "http://localhost:5000"; // Use HTTP for local development
     
     // Utility function to handle API requests
     const fetchData = async (endpoint, setData, setLoading) => {
@@ -247,8 +242,8 @@ const App = () => {
                             <div className="caption">Fees Exemption Letter</div>
                         </div>
                         <div className="gallery-item">
-                            <img src="letter2.jpg" alt="Letters Submitted" />
-                            <div className="caption">Letters Submitted</div>
+                            <img src="letter2.jpg" alt="Letter to Administration" />
+                            <div className="caption">Letter to Administration</div>
                         </div>
                         <div className="gallery-item">
                             <video controls>
