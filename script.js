@@ -13,7 +13,7 @@ const App = () => {
     const [infraIssues, setInfraIssues] = React.useState([]);
     const [loadingInfraIssues, setLoadingInfraIssues] = React.useState(true);
 
-    const API_BASE_URL = "http://localhost:5000"; // Use HTTP for local development
+    const API_BASE_URL = "https://samadhan-1pzu.onrender.com"; // Use HTTP for local development
     
     // Utility function to handle API requests
     const fetchData = async (endpoint, setData, setLoading) => {
