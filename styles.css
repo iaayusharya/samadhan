@@ -89,7 +89,7 @@ nav {
         display: none; /* Hidden by default */
         flex-direction: column;
         width: 100%;
-        background-color: #333;
+        background-color: #0073e6;
         position: absolute;
         top: 50px; /* Position below the header */
         right: 0;
