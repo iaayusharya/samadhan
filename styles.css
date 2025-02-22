@@ -47,21 +47,42 @@ header {
 
 nav {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between; /* Logo on left, hamburger on right */
     align-items: center;
-    position: relative; /* Needed for absolute positioning of dropdown */
+    padding: 10px 20px;
+    position: relative;
 }
 
+/* Logo Container */
+.logo-container {
+    display: flex;
+    align-items: center; /* Center logo vertically */
+}
+
+.logo-container img {
+    max-width: 100%; /* Ensure the logo fits within its container */
+    height: auto;
+    max-height: 80px; /* Adjust based on your logo size */
+    width: auto;
+}
+
+/* Hamburger Menu */
 .hamburger {
     display: none;
     background: none;
+    align-items: flex-start;
     border: none;
     color: white;
     font-size: 24px;
     cursor: pointer;
+    position: absolute;
+    right: -150px;
+    top: -70%;
+    transform: translateY(-90%);
     z-index: 1000; /* Ensure it stays above other elements */
 }
 
+/* Navigation Links */
 .nav-links {
     list-style: none;
     margin: 0;
@@ -82,35 +103,30 @@ nav {
 /* Mobile Styles */
 @media (max-width: 768px) {
     .hamburger {
-        display: block;
+        display: block; /* Show hamburger on mobile */
     }
 
     .nav-links {
-        display: none; /* Hidden by default */
-        flex-direction: column;
-        width: 100%;
+        position: fixed;
+        top: 0;
+        right: -100%; /* Start off-screen */
+        height: 100vh;
+        width: 60%; /* Width of the sliding menu */
         background-color: #0073e6;
-        position: absolute;
-        top: 50px; /* Position below the header */
-        right: 0;
-        text-align: center;
+        flex-direction: column;
+        align-items: flex-start; /* Align links to the left */
+        justify-content: flex-start; /* Start from the top */
+        padding-top: 60px; /* Space for the logo and hamburger */
+        transition: right 0.3s ease-in-out; /* Smooth slide-in effect */
     }
 
     .nav-links.active {
-        display: flex; /* Show when active */
+        right: 0; /* Slide in */
     }
-}
-.logo-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px;
-}
 
-.logo-container img {
-    max-width: 80%;
-    height: auto;
-    max-height: 100px;
+    .nav-links li {
+        margin: 15px 20px; /* Add margin for better spacing */
+    }
 }
 
 /* Navigation */
