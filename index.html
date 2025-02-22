@@ -126,9 +126,19 @@
         });
 
         // Hamburger Menu Toggle
-        document.querySelector('.hamburger').addEventListener('click', function() {
-    const navLinks = document.querySelector('.nav-links');
+        document.getElementById('hamburger-menu').addEventListener('click', function() {
+    const navLinks = document.getElementById('nav-links');
+    const hamburger = document.getElementById('hamburger-menu');
+
+    // Toggle menu visibility
     navLinks.classList.toggle('active');
+
+    // Change icon between hamburger and cross
+    if (navLinks.classList.contains('active')) {
+        hamburger.textContent = '✕'; // Change to cross
+    } else {
+        hamburger.textContent = '☰'; // Change back to hamburger
+    }
 });
 
         // Install Prompt for PWA

@@ -86,25 +86,21 @@ nav {
     }
 
     .nav-links {
-        display: flex;
+        display: none;
         flex-direction: column;
         width: 100%;
-        background: #0073e6; /* Match the column color */;
+        background-color: #333;
         position: absolute;
-        top: -100%; /* Start off-screen */
+        top: 50px;
         right: 0;
         text-align: center;
-        transition: top 0.3s ease-in-out; /* Smooth transition */
     }
 
     .nav-links.active {
-        top: 50px; /* Move down to visible position */
+        display: flex;
     }
-
-    .nav-links li {
-        margin: 10px 0;
-    }
-}.logo-container {
+}
+.logo-container {
     display: flex;
     justify-content: center;
     align-items: center;
