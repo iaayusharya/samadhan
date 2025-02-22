@@ -1,5 +1,7 @@
 const App = () => {
+    const [applicantName, setApplicantName] = React.useState("");
     const [email, setEmail] = React.useState("");
+    const [subject, setSubject] = React.useState("");
     const [issue, setIssue] = React.useState("");
     const [department, setDepartment] = React.useState("");
     const [issues, setIssues] = React.useState([]);
@@ -11,8 +13,14 @@ const App = () => {
     const [infraIssues, setInfraIssues] = React.useState([]);
     const [loadingInfraIssues, setLoadingInfraIssues] = React.useState(true);
 
+    const departmentEmails = {
+        "Administration": "admin@svsu.ac.in",
+        "Examination": "exam@svsu.ac.in",
+        "Finance": "finance@svsu.ac.in",
+        "Library": "library@svsu.ac.in"
+    };
 
-    const API_BASE_URL = "https://samadhan-1pzu.onrender.com";
+    const API_BASE_URL = "http://localhost:5000";
 
     // Utility function to handle API requests
     const fetchData = async (endpoint, setData, setLoading) => {
@@ -43,80 +51,79 @@ const App = () => {
         }
     }, []);
 
-    //Infra
-    React.useEffect(() => {
-        fetchData("issues", setIssues, setLoadingIssues);
-        fetchData("admin-issues", setAdminIssues, setLoadingAdminIssues);
-        fetchData("infra-issues", setInfraIssues, setLoadingInfraIssues); // Fetch Infra Issues
-    }, []);
-    
     // Fetch issues from server
     React.useEffect(() => {
         fetchData("issues", setIssues, setLoadingIssues);
         fetchData("admin-issues", setAdminIssues, setLoadingAdminIssues);
+        fetchData("infra-issues", setInfraIssues, setLoadingInfraIssues);
     }, []);
 
     // Handle application generation
     const handleGenerateApplication = async () => {
-        if (!issue.trim() || !department.trim()) {
-            alert("Please describe your issue and select a department.");
+        if (!applicantName.trim() || !issue.trim() || !department.trim()) {
+            alert("Please fill in all fields before generating the application.");
             return;
         }
-
+    
         try {
             const response = await fetch(`${API_BASE_URL}/generate-application`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, issue, department }),
+                body: JSON.stringify({ applicantName, email, issue, department }),
             });
-
+    
             if (!response.ok) {
-                throw new Error(`Error ${response.status}: Failed to generate application`);
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
-
-            const result = await response.json();
-            setGeneratedApplication(result.application || "Failed to generate application.");
+    
+            const data = await response.json();
+            setGeneratedApplication(data.application);
+            setSubject(data.subject); // Update the subject state
+            alert("Application generated successfully!");
         } catch (error) {
             console.error("Error generating application:", error);
             alert("Error generating application. Please try again.");
         }
     };
-    
+
     // Handle issue submission
     const handleSubmit = async () => {
-        if (!email.trim() || !issue.trim() || !generatedApplication.trim()) {
-            alert("Please fill in all fields before submitting.");
-            return;
+    if (!email.trim() || !issue.trim() || !generatedApplication.trim() || !subject.trim()) {
+        alert("Please fill in all fields before submitting.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/submit-issue`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applicantName, email, issue, department, application: generatedApplication, subject }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: Issue submission failed`);
         }
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/submit-issue`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, issue, application: generatedApplication, department }),
-            });
+        const result = await response.json();
+        alert(result.message || "Issue submitted successfully!");
 
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: Issue submission failed`);
-            }
-
-            const result = await response.json();
-            alert(result.message || "Issue submitted successfully!");
-
-            // Refresh issues list
-            fetchData("issues", setIssues, setLoadingIssues);
-
-            // Clear fields after submission
-            setEmail("");
-            setIssue("");
-            setDepartment("");
-            setGeneratedApplication("");
-        } catch (error) {
-            console.error("Error submitting issue:", error);
-            alert("Failed to submit issue. Please try again.");
+        // Open Gmail automatically
+        if (result.gmailURL) {
+            window.open(result.gmailURL, "_blank");
         }
-    };
 
+        // Clear fields after submission
+        setApplicantName("");
+        setEmail("");
+        setIssue("");
+        setDepartment("");
+        setGeneratedApplication("");
+        setSubject(""); // Clear the subject state
+    } catch (error) {
+        console.error("Error submitting issue:", error);
+        alert("Failed to submit issue. Please try again.");
+    }
+};
     return (
         <div>
             <header style={{ background: "#007bff", color: "#fff", padding: "10px", textAlign: "center" }}>
@@ -126,6 +133,15 @@ const App = () => {
             <main style={{ padding: "20px" }}>
                 <section>
                     <h2>Report an Issue</h2>
+                    {/* Applicant Name Input */}
+                    <input
+                        type="text"
+                        placeholder="Enter your name"
+                        value={applicantName}
+                        onChange={(e) => setApplicantName(e.target.value)}
+                        required
+                    />
+                    <br /><br />
                     <input
                         type="email"
                         placeholder="Enter your email"
@@ -154,13 +170,13 @@ const App = () => {
 
                 {generatedApplication && (
                     <section>
-                    <h2>Generated Application</h2>
-                    <textarea value={generatedApplication} rows="10" style={{ width: "100%" }} readOnly></textarea>
-                    <br />
-                    <button onClick={handleSubmit}>Submit Issue</button>
-                    <button onClick={() => navigator.clipboard.writeText(generatedApplication)}>
-                    <i class="fa-solid fa-clipboard"></i> Copy to Clipboard
-                    </button>
+                        <h2>Generated Application</h2>
+                        <textarea value={generatedApplication} rows="10" style={{ width: "100%" }} readOnly></textarea>
+                        <br />
+                        <button onClick={handleSubmit}>Submit Issue</button>
+                        <button onClick={() => navigator.clipboard.writeText(generatedApplication)}>
+                            📋 Copy to Clipboard
+                        </button>
                     </section>
                 )}
 
@@ -182,28 +198,29 @@ const App = () => {
                             )}
                         </ul>
                     )}
-                </section>    
+                </section>
+
                 <section id="infra-issues">
-    <h2>Infrastructure Related Issues</h2>
-    <button onClick={() => fetchData("infra-issues", setInfraIssues, setLoadingInfraIssues)}>
-        Refresh Infra Issues
-    </button>
-    {loadingInfraIssues ? (
-        <p>Loading infrastructure issues...</p>
-    ) : (
-        <ul>
-            {infraIssues.length > 0 ? (
-                infraIssues.map((issue, index) => <li key={index}>{issue}</li>)
-            ) : (
-                <li>No infrastructure issues listed.</li>
-            )}
-        </ul>
-    )}
-</section>
+                    <h2>Infrastructure Related Issues</h2>
+                    <button onClick={() => fetchData("infra-issues", setInfraIssues, setLoadingInfraIssues)}>
+                        Refresh Infra Issues
+                    </button>
+                    {loadingInfraIssues ? (
+                        <p>Loading infrastructure issues...</p>
+                    ) : (
+                        <ul>
+                            {infraIssues.length > 0 ? (
+                                infraIssues.map((issue, index) => <li key={index}>{issue}</li>)
+                            ) : (
+                                <li>No infrastructure issues listed.</li>
+                            )}
+                        </ul>
+                    )}
+                </section>
 
                 <section id="frequent-issues">
                     <h2>Reported Issues</h2>
-                    <button onClick={() => fetchData("frequent-issues", setIssues, setLoadingIssues)}>
+                    <button onClick={() => fetchData("issues", setIssues, setLoadingIssues)}>
                         Refresh Reported Issues
                     </button>
                     {loadingIssues ? (
@@ -211,7 +228,11 @@ const App = () => {
                     ) : (
                         <ul>
                             {issues.length > 0 ? (
-                                issues.map((issue, index) => <li key={index}>{issue.issue} - {issue.department}</li>)
+                                issues.map((issue, index) => (
+                                    <li key={index}>
+                                        {issue.issue} - {issue.department} - {issue.applicantName}
+                                    </li>
+                                ))
                             ) : (
                                 <li>No Frequent issues reported yet.</li>
                             )}
@@ -225,38 +246,38 @@ const App = () => {
 
 // Render React inside the root div
 ReactDOM.render(<App />, document.getElementById("root"));
-// ✅ Register Service Worker
+
+// Register Service Worker
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then(reg => console.log("✅ Service Worker registered!", reg))
-      .catch(err => console.error("❌ Service Worker registration failed!", err));
-  });
+    window.addEventListener("load", () => {
+        navigator.serviceWorker
+            .register("/service-worker.js")
+            .then(reg => console.log("✅ Service Worker registered!", reg))
+            .catch(err => console.error("❌ Service Worker registration failed!", err));
+    });
 }
 
-// ✅ Install Prompt for PWA
+// Install Prompt for PWA
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt", event => {
-  event.preventDefault();
-  deferredPrompt = event;
+    event.preventDefault();
+    deferredPrompt = event;
 
-  // Show install button (Ensure this button exists in your HTML)
-  const installButton = document.getElementById("install-btn");
-  if (installButton) {
-    installButton.style.display = "block";
+    // Show install button (Ensure this button exists in your HTML)
+    const installButton = document.getElementById("install-btn");
+    if (installButton) {
+        installButton.style.display = "block";
 
-    installButton.addEventListener("click", () => {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(choice => {
-        if (choice.outcome === "accepted") {
-          console.log("🎉 User installed the PWA!");
-        } else {
-          console.log("❌ User dismissed the install prompt.");
-        }
-        deferredPrompt = null;
-      });
-    });
-  }
+        installButton.addEventListener("click", () => {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(choice => {
+                if (choice.outcome === "accepted") {
+                    console.log("🎉 User installed the PWA!");
+                } else {
+                    console.log("❌ User dismissed the install prompt.");
+                }
+                deferredPrompt = null;
+            });
+        });
+    }
 });
-

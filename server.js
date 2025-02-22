@@ -7,10 +7,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 // Load environment variables
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const MONGO_URI = process.env.MONGO_URI;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
 
-if (!GEMINI_API_KEY || !MONGO_URI || !EMAIL_USER || !EMAIL_PASS) {
+if (!GEMINI_API_KEY || !MONGO_URI) {
     console.error("❌ ERROR: Missing environment variables. Check your .env file.");
     process.exit(1);
 }
@@ -20,18 +18,6 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
-// ✅ Fix CORS Issue
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
-    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
-
-// ✅ Define Routes Below
-app.get("/", (req, res) => {
-    res.send("Server is running...");
-});
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -43,10 +29,11 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // Define Schema & Model
 const issueSchema = new mongoose.Schema({
+    applicantName: { type: String, required: true },
     email: { type: String, required: true },
-    subject: { type: String, required: true },
     issue: { type: String, required: true },
     department: { type: String, required: true },
+    application: { type: String, required: true },
 });
 
 const Issue = mongoose.model("Issue", issueSchema);
@@ -85,22 +72,20 @@ app.get("/infra-issues", (req, res) => {
     }
 });
 
-// ✅ Email Validation Function
-const validateEmail = (email) => {
-    return typeof email === "string" && email.endsWith("@svsu.ac.in");
-};
-//API to Generate Application
+// ✅ API: Generate Application
 app.post("/generate-application", async (req, res) => {
     try {
-        const { email, issue, department } = req.body;
+        const { applicantName, email, issue, department } = req.body;
 
-        if (!email || !issue || !department) {
-            return res.status(400).json({ error: "Please provide email, issue, and department." });
+        // Validate input
+        if (!applicantName || !email || !issue || !department) {
+            return res.status(400).json({ error: "Please provide all required fields." });
         }
         if (!email.endsWith("@svsu.ac.in")) {
             return res.status(400).json({ error: "Invalid email! Use an SVSU email (xyz@svsu.ac.in)" });
         }
 
+        // Generate application using Google Generative AI
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
@@ -120,56 +105,72 @@ app.post("/generate-application", async (req, res) => {
             Ensure the letter is **well-structured**, **polite**, and **concise**.
         `;
 
-        const result = await model.generateContent({ contents: [{ parts: [{ text: prompt }] }] });
+        // Call AI API
+        const result = await model.generateContent(prompt);
+        let generatedText = result.response.text();
 
-        if (!result || !result.response || !result.response.candidates) {
-            return res.status(500).json({ error: "Failed to generate application. Try again." });
-        }
+        // Remove unnecessary ** and * symbols
+        generatedText = generatedText
+    .replace(/\*\*/g, "") // Remove **
+    .replace(/\*/g, "•"); // Replace * with • for bullet points
 
-        const generatedText = result.response.candidates[0]?.content?.parts?.[0]?.text || "";
+        // Extract subject and application text
+        const subject = generatedText.split("\n")[0].replace("Subject:", "").trim();
+        const application = generatedText.split("\n").slice(1).join("\n").trim();
 
-        console.log("📜 AI Raw Response:", generatedText);
-
-        // ✅ Normalize AI response (remove extra symbols like **, :, etc.)
-        const cleanedText = generatedText.replace(/\*\*/g, "").trim();
-        const lines = cleanedText.split("\n").map(line => line.trim());
-
-        // ✅ Extract Subject
-        let subject = lines.find(line => line.toLowerCase().startsWith("subject"));
-        if (subject) {
-            subject = subject.replace(/subject[:\s]*/i, "").trim();
-        } else {
-            subject = "Application Regarding Issue"; // Fallback if AI response is incorrect
-        }
-
-        // ✅ Extract Application Text
-        let applicationStartIndex = lines.findIndex(line => line.toLowerCase().includes("application"));
-        let application = applicationStartIndex !== -1
-            ? lines.slice(applicationStartIndex + 1).join("\n").trim()
-            : lines.slice(1).join("\n").trim(); // Fallback
-
-        if (!subject || !application) {
-            console.error("❌ AI response format issue. Received:", generatedText);
-            return res.status(500).json({ error: "AI response format invalid. Try again later." });
-        }
-
-        // ✅ Save to Database
-        const newIssue = new Issue({ email, subject, issue, department });
-        await newIssue.save();
-
-        res.json({ subject, application });
-
+        // Return response
+        return res.json({
+            subject,
+            application
+        });
     } catch (error) {
         console.error("❌ Error generating application:", error);
-        res.status(500).json({ error: "Server error while generating application." });
+        return res.status(500).json({ error: "Server error while generating application." });
     }
 });
+// ✅ API: Submit Issue
+app.post("/submit-issue", async (req, res) => {
+    try {
+        const { applicantName, email, issue, department, application, subject } = req.body;
 
+        // Validate input
+        if (!applicantName || !email || !issue || !department || !application || !subject) {
+            return res.status(400).json({ error: "Please provide all required fields." });
+        }
+
+        // Define department-based email selection
+        const departmentEmails = {
+            "Administration": "admin@svsu.ac.in",
+            "Examination": "exam@svsu.ac.in",
+            "Finance": "finance@svsu.ac.in",
+            "Library": "library@svsu.ac.in"
+        };
+
+        // Get recipient email based on selected department
+        const recipientEmail = departmentEmails[department] || "default@svsu.ac.in";
+
+        // Save the issue to the database
+        const newIssue = new Issue({ applicantName, email, issue, department, subject, application });
+        await newIssue.save();
+
+        // Construct Gmail Compose URL
+        const gmailURL = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipientEmail}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(application)}`;
+
+        // Return response with Gmail URL
+        return res.json({
+            message: "Issue submitted successfully!",
+            gmailURL
+        });
+    } catch (error) {
+        console.error("❌ Error submitting issue:", error);
+        return res.status(500).json({ error: "Failed to submit issue. Please try again." });
+    }
+});
 
 // ✅ API: Get Frequent Issues
 app.get("/issues", async (req, res) => {
     try {
-        const issues = await Issue.find({}, "subject -_id").limit(10).sort({ _id: -1 });
+        const issues = await Issue.find({}, "applicantName email issue department application -_id").limit(10).sort({ _id: -1 });
         res.json(issues);
     } catch (error) {
         console.error("❌ Error fetching issues:", error);
