@@ -87,7 +87,7 @@ app.post("/generate-application", async (req, res) => {
 
         // Generate application using Google Generative AI
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
             You are an AI assistant. Write a formal application to the ${department} department of 
